@@ -43,11 +43,15 @@ protobuf {
             artifact = "io.grpc:protoc-gen-grpc-java:1.22.1"
         }
     }
-//    generateProtoTasks {
-//        all()*.plugins {
-//            grpc {}
-//        }
-//    }
+    generateProtoTasks {
+        ofSourceSet("main").forEach {
+            it.plugins {
+                // Apply the "grpc" plugin whose spec is defined above, without options.
+                id("grpc")
+            }
+        }
+    }
+
 }
 
 tasks.test {
