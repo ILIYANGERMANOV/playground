@@ -15,6 +15,30 @@ class TendermintApp(
     private var txn: Transaction? = null
     private var store: Store? = null
 
+    override fun echo(req: RequestEcho?, responseObserver: StreamObserver<ResponseEcho?>) {
+        val resp = ResponseEcho.newBuilder().build()
+        responseObserver.onNext(resp)
+        responseObserver.onCompleted()
+    }
+
+    override fun info(req: RequestInfo?, responseObserver: StreamObserver<ResponseInfo?>) {
+        val resp = ResponseInfo.newBuilder().build()
+        responseObserver.onNext(resp)
+        responseObserver.onCompleted()
+    }
+
+    override fun setOption(req: RequestSetOption?, responseObserver: StreamObserver<ResponseSetOption?>) {
+        val resp = ResponseSetOption.newBuilder().build()
+        responseObserver.onNext(resp)
+        responseObserver.onCompleted()
+    }
+
+    override fun initChain(req: RequestInitChain?, responseObserver: StreamObserver<ResponseInitChain?>) {
+        val resp = ResponseInitChain.newBuilder().build()
+        responseObserver.onNext(resp)
+        responseObserver.onCompleted()
+    }
+
     override fun checkTx(req: RequestCheckTx, responseObserver: StreamObserver<ResponseCheckTx>) {
         val code = req.tx.validate()
         val resp = ResponseCheckTx.newBuilder()
