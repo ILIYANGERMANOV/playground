@@ -30,11 +30,17 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:1.42.1")
     implementation("io.grpc:grpc-netty-shaded:1.42.1")
     implementation("io.grpc:grpc-stub:1.42.1")
-    
+    // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
+    //Resolves @javax.annotation.Generated missing
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
+
+
     testImplementation(kotlin("test"))
 }
 
 protobuf {
+    generatedFilesBaseDir = "$projectDir/src/main/kotlin/proto"
+
     protoc {
         artifact = "com.google.protobuf:protoc:3.7.1"
     }
@@ -51,7 +57,6 @@ protobuf {
             }
         }
     }
-
 }
 
 tasks.test {
