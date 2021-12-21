@@ -5,8 +5,8 @@ import jetbrains.exodus.env.Environment
 import jetbrains.exodus.env.Store
 import jetbrains.exodus.env.StoreConfig
 import jetbrains.exodus.env.Transaction
-import types.ABCIApplicationGrpc
-import types.Types.*
+import tendermint.abci.ABCIApplicationGrpc
+import tendermint.abci.Types.*
 
 class TendermintApp(
     private val env: Environment
@@ -23,12 +23,6 @@ class TendermintApp(
 
     override fun info(req: RequestInfo?, responseObserver: StreamObserver<ResponseInfo?>) {
         val resp = ResponseInfo.newBuilder().build()
-        responseObserver.onNext(resp)
-        responseObserver.onCompleted()
-    }
-
-    override fun setOption(req: RequestSetOption?, responseObserver: StreamObserver<ResponseSetOption?>) {
-        val resp = ResponseSetOption.newBuilder().build()
         responseObserver.onNext(resp)
         responseObserver.onCompleted()
     }
@@ -77,6 +71,12 @@ class TendermintApp(
         val resp = ResponseCommit.newBuilder()
             .setData(ByteString.copyFrom(ByteArray(8)))
             .build()
+        responseObserver.onNext(resp)
+        responseObserver.onCompleted()
+    }
+
+    override fun endBlock(request: RequestEndBlock, responseObserver: StreamObserver<ResponseEndBlock>) {
+        val resp = ResponseEndBlock.newBuilder().build()
         responseObserver.onNext(resp)
         responseObserver.onCompleted()
     }
