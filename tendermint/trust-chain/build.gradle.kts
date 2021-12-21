@@ -1,7 +1,5 @@
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import com.google.protobuf.gradle.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.10"
@@ -33,6 +31,7 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
     //Resolves @javax.annotation.Generated missing
     implementation("javax.annotation:javax.annotation-api:1.3.2")
+    implementation("org.jetbrains.xodus:xodus-environment:1.3.232")
 
 
     testImplementation(kotlin("test"))
