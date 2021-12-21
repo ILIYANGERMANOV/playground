@@ -33,6 +33,14 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("org.jetbrains.xodus:xodus-environment:1.3.232")
 
+    //Fix logging errors
+    val slf4jVersion = "1.7.32"
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    implementation("org.slf4j:slf4j-simple:$slf4jVersion")
+    //----------------------------------------
+
 
     testImplementation(kotlin("test"))
 }
