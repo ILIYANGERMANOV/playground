@@ -1,0 +1,1179 @@
+
+--------------------
+-- ./app/Main.hs
+module Main where
+
+import Lib
+import Data
+
+g = makeGame grid languages
+
+main :: IO ()
+main = playGame g
+
+
+--------------------
+-- ./src/Data.hs
+module Data (grid, languages) where
+
+grid = [ "__C________R___"
+       , "__SI________U__"
+       , "__HASKELL____B_"
+       , "__A__A_____S__Y"
+       , "__R___B___C____"
+       , "__PHP____H_____"
+       , "____S_LREP_____"
+       , "____I__M_Y__L__"
+       , "____L_E__T_O___"
+       , "_________HB____"
+       , "_________O_____"
+       , "________CN_____"
+       ]
+
+languages = [ "BASIC"
+            , "COBOL"
+            , "CSHARP"
+            , "HASKELL"
+            , "LISP"
+            , "PERL"
+            , "PHP"
+            , "PYTHON"
+            , "RUBY"
+            , "SCHEME"
+            ]
+
+--------------------
+-- ./src/Lib.hs
+module Lib
+    ( Game(Game, gameGrid, gameWords)
+    , makeGame
+    , score
+    , totalWords
+    , playWord
+    , playGame
+    , Grid
+    , Cell(Cell)
+    , formatGrid
+    , findWord
+    , findWordInLine
+    , findWords
+    , getLines
+    , gridWithCoords
+    , findWordInCellInfix
+    , findWordInCellPrefix
+    , cells2string
+    ) where
+
+import System.IO
+import Data.List (isInfixOf, transpose)
+import Data.Maybe (catMaybes, listToMaybe)
+import qualified Data.Map as M
+
+data Game = Game { gameGrid  :: Grid Cell
+                 , gameWords :: M.Map String (Maybe [Cell])
+                 }
+
+type Grid a = [[a]]
+
+data Cell = Cell (Int, Int) Char | Empty
+            deriving (Eq, Ord, Show)
+
+makeGame :: Grid Char -> [String] -> Game
+makeGame grid words =
+  let grid'  = gridWithCoords grid
+      words' = M.fromList $ map (\word -> (word, Nothing)) words
+  in Game grid' words'
+
+totalWords :: Game -> Int
+totalWords game = length $ M.keys (gameWords game)
+
+score :: Game -> Int
+score game = length $ catMaybes $ M.elems (gameWords game)
+
+playWord :: Game -> String -> Game
+playWord game word | not (M.member word (gameWords game)) = game
+playWord game word =
+  let grid = gameGrid game
+      foundWord = findWord grid word
+      newGame = case foundWord of
+        Nothing -> game
+        Just cs ->
+          let words = gameWords game
+              words' = M.insert word foundWord words
+          in Game grid words'
+  in newGame
+
+playGame game = do
+  let grid = gameGrid game
+      words = gameWords game
+      s = score game
+      t = totalWords game
+  hSetBuffering stdout NoBuffering
+  putStrLn ((show s) ++ "/" ++ (show t))
+  if s < t then do
+    putStr (formatGrid grid)
+    putStr "Enter a word> "
+    word <- getLine
+    let newGame = playWord game word
+    playGame newGame
+  else
+    putStrLn "Congratulations!"
+
+gridWithCoords :: Grid Char -> Grid Cell
+gridWithCoords grid = zipWith zipRows [0..] grid
+  where zipRows y row = zipWith (zipRow y) [0..] row
+        zipRow y x char = Cell (y, x) char
+
+formatGrid :: Grid Cell -> String
+formatGrid grid =
+  let charGrid = map (map cell2char) grid
+  in unlines charGrid
+
+findWords :: Grid Cell -> [String] -> [[Cell]]
+findWords grid words =
+  let findWord' = findWord grid
+      foundWords = map findWord' words
+  in catMaybes foundWords
+
+findWord :: Grid Cell -> String -> Maybe [Cell]
+findWord grid word =
+  let lines = getLines grid
+      foundWords = map (findWordInCellInfix word) lines
+  in listToMaybe (catMaybes foundWords)
+
+getLines :: Grid Cell -> Grid Cell
+getLines grid =
+  let horizontal = grid
+      vertical = transpose horizontal
+      diagonal = diagonalize horizontal
+      diagonal' = diagonalize (map reverse horizontal)
+      lines = horizontal ++ vertical ++ diagonal ++ diagonal'
+  in lines ++ (map reverse lines)
+
+diagonalize :: Grid Cell -> Grid Cell
+-- diagonalize grid = transpose (skew grid)
+diagonalize = transpose . skew
+
+skew :: Grid Cell -> Grid Cell
+skew [] = []
+skew (x:xs) = x : skew (map indent xs)
+  where indent line = Empty : line
+
+findWordInLine :: String -> String -> Bool
+-- findWordInLine word line = word `isInfixOf` line
+-- findWordInLine word line = isInfixOf word line
+findWordInLine = isInfixOf
+
+findWordInCellInfix :: String -> [Cell] -> Maybe [Cell]
+findWordInCellInfix _ [] = Nothing
+findWordInCellInfix word line =
+  let foundWord = findWordInCellPrefix [] word line
+  in case foundWord of
+       Nothing -> findWordInCellInfix word (tail line)
+       Just _ -> foundWord
+
+cell2char (Cell _ c) = c
+cell2char _ = '?'
+
+cells2string = map cell2char
+
+findWordInCellPrefix :: [Cell] -> String -> [Cell] -> Maybe [Cell]
+findWordInCellPrefix acc (s:ss) (c:cs) | s == cell2char c
+                                  = findWordInCellPrefix (c : acc) ss cs
+findWordInCellPrefix acc []     _ = Just (reverse acc)
+findWordInCellPrefix _    _     _ = Nothing
+
+--------------------
+-- ./test/Spec.hs
+import Test.Hspec
+import Lib
+import Data
+import Data.Maybe
+
+game = makeGame grid languages
+grid' = gameGrid game
+
+main :: IO ()
+main = hspec $ do
+  describe "formatGrid" $ do
+    it "joins up a grid into a string" $ do
+      formatGrid ["abc", "def", "ghi"] `shouldBe` "abc\ndef\nghi\n"
+
+  describe "findWord" $ do
+    it "fails to find missing words" $ do
+      testFindWord grid' "HASKELL"
+      testFindWord grid' "PERL"
+
+      findWord grid' "FRENCH" `shouldBe` Nothing
+
+  describe "findWords" $ do
+    it "should find all the words in word-list" $ do
+      let found = findWords grid' languages
+      map cells2string found `shouldBe` languages
+
+testFindWord grid word = do
+  let found = fromJust (findWord grid word)
+  cells2string found `shouldBe` word
+
+--------------------
+commit 0e305d0e4d791c9e6c4451e1edc9e1095a17e080
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 12:48:33 2016 +0000
+
+    Created `stack new words`
+
+diff --git a/s4/words/LICENSE b/s4/words/LICENSE
+new file mode 100644
+index 0000000..36a5cf9
+--- /dev/null
++++ b/s4/words/LICENSE
+@@ -0,0 +1,30 @@
++Copyright Hakim (c) 2016
+...
+diff --git a/s4/words/Setup.hs b/s4/words/Setup.hs
+new file mode 100644
+index 0000000..9a994af
+--- /dev/null
++++ b/s4/words/Setup.hs
+@@ -0,0 +1,2 @@
++import Distribution.Simple
++main = defaultMain
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+new file mode 100644
+index 0000000..de1c1ab
+--- /dev/null
++++ b/s4/words/app/Main.hs
+@@ -0,0 +1,6 @@
++module Main where
++
++import Lib
++
++main :: IO ()
++main = someFunc
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+new file mode 100644
+index 0000000..d36ff27
+--- /dev/null
++++ b/s4/words/src/Lib.hs
+@@ -0,0 +1,6 @@
++module Lib
++    ( someFunc
++    ) where
++
++someFunc :: IO ()
++someFunc = putStrLn "someFunc"
+diff --git a/s4/words/test/Spec.hs b/s4/words/test/Spec.hs
+new file mode 100644
+index 0000000..cd4753f
+--- /dev/null
++++ b/s4/words/test/Spec.hs
+@@ -0,0 +1,2 @@
++main :: IO ()
++main = putStrLn "Test suite not yet implemented"
+diff --git a/s4/words/words.cabal b/s4/words/words.cabal
+new file mode 100644
+index 0000000..f0acb56
+--- /dev/null
++++ b/s4/words/words.cabal
+@@ -0,0 +1,41 @@
++name:                words
++version:             0.1.0.0
++synopsis:            Initial project template from stack
++description:         Please see README.md
++homepage:            https://github.com/osfameron/words#readme
++license:             BSD3
++license-file:        LICENSE
++author:              Hakim
++maintainer:          hakim@greenokapi.net
++copyright:           BSD3
++category:            tutorial
++build-type:          Simple
++-- extra-source-files:
++cabal-version:       >=1.10
++
++library
++  hs-source-dirs:      src
++  exposed-modules:     Lib
++  build-depends:       base >= 4.7 && < 5
++  default-language:    Haskell2010
++
++executable words-exe
++  hs-source-dirs:      app
++  main-is:             Main.hs
++  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
++  build-depends:       base
++                     , words
++  default-language:    Haskell2010
++
++test-suite words-test
++  type:                exitcode-stdio-1.0
++  hs-source-dirs:      test
++  main-is:             Spec.hs
++  build-depends:       base
++                     , words
++  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
++  default-language:    Haskell2010
++
++source-repository head
++  type:     git
++  location: https://github.com/osfameron/words
+
+--------------------
+commit 61de8d5cc0716674dbde31067af8d34adb206715
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 12:48:48 2016 +0000
+
+    Added sample data for grid & words
+
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+index de1c1ab..0cbaf2a 100644
+--- a/s4/words/app/Main.hs
++++ b/s4/words/app/Main.hs
+@@ -2,5 +2,31 @@ module Main where
+ 
+ import Lib
+ 
++grid = [ "__C________R___"
++       , "__SI________U__"
++       , "__HASKELL____B_"
++       , "__A__A_____S__Y"
++       , "__R___B___C____"
++       , "__PHP____H_____"
++       , "____S_LREP_____"
++       , "____I__M_Y__L__"
++       , "____L_E__T_O___"
++       , "_________HB____"
++       , "_________O_____"
++       , "________CN_____"
++       ]
++
++languages = [ "BASIC"
++            , "COBOL"
++            , "CSHARP"
++            , "HASKELL"
++            , "LISP"
++            , "PERL"
++            , "PHP"
++            , "PYTHON"
++            , "RUBY"
++            , "SCHEME"
++            ]
++
+ main :: IO ()
+ main = someFunc
+
+--------------------
+commit 6e607ff0664efa53b55c3b762e4f3af3a007378f
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 12:53:49 2016 +0000
+
+    formatGrid
+
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+index 0cbaf2a..4e217aa 100644
+--- a/s4/words/app/Main.hs
++++ b/s4/words/app/Main.hs
+@@ -29,4 +29,4 @@ languages = [ "BASIC"
+             ]
+ 
+ main :: IO ()
+-main = someFunc
++main = putStrLn $ formatGrid grid
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index d36ff27..0e8713d 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -1,6 +1,9 @@
+ module Lib
+-    ( someFunc
++    ( Grid
++    , formatGrid
+     ) where
+ 
+-someFunc :: IO ()
+-someFunc = putStrLn "someFunc"
++type Grid = [String]
++
++formatGrid :: Grid -> String
++formatGrid = unlines
+
+--------------------
+commit bf6157e16f942699be750dd8235ba8292c67a4dd
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 13:04:45 2016 +0000
+
+    findWordInLine
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 0e8713d..a6232e3 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -1,9 +1,21 @@
+ module Lib
+     ( Grid
+     , formatGrid
++    , findWord
++    , findWordInLine
+     ) where
+ 
++import Data.List (isInfixOf)
++
+ type Grid = [String]
+ 
+ formatGrid :: Grid -> String
+ formatGrid = unlines
++
++findWord :: Grid -> String -> Bool
++findWord = undefined
++
++findWordInLine :: String -> String -> Bool
++-- findWordInLine word line = word `isInfixOf` line
++-- findWordInLine word line = isInfixOf word line
++findWordInLine = isInfixOf
+
+--------------------
+commit b78dd5eac4741c7bec5afb6cbdf43dc725049171
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 13:06:14 2016 +0000
+
+    first version of findWord (left to right only)
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index a6232e3..db7a020 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -13,7 +13,7 @@ formatGrid :: Grid -> String
+ formatGrid = unlines
+ 
+ findWord :: Grid -> String -> Bool
+-findWord = undefined
++findWord grid word = or $ map (findWordInLine word) grid
+ 
+ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+
+--------------------
+commit 5f4769bffde66d370b4806aed6c48771e9f77851
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 13:08:47 2016 +0000
+
+    findWord L-R and R-L
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index db7a020..8175445 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -13,7 +13,9 @@ formatGrid :: Grid -> String
+ formatGrid = unlines
+ 
+ findWord :: Grid -> String -> Bool
+-findWord grid word = or $ map (findWordInLine word) grid
++findWord grid word =
++  let lines = grid ++ (map reverse grid)
++  in or $ map (findWordInLine word) lines
+ 
+ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+
+--------------------
+commit bf0010f6fd6f21b3f6ac34c62161565f7e931e10
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 13:17:33 2016 +0000
+
+    First, failed attempt at findWords
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 8175445..52689eb 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -3,6 +3,7 @@ module Lib
+     , formatGrid
+     , findWord
+     , findWordInLine
++    , findWords
+     ) where
+ 
+ import Data.List (isInfixOf)
+@@ -12,6 +13,11 @@ type Grid = [String]
+ formatGrid :: Grid -> String
+ formatGrid = unlines
+ 
++-- findWords :: Grid -> [String] -> [String]
++findWords grid words =
++  let findWord' = findWord grid
++  in map findWord' words
++
+ findWord :: Grid -> String -> Bool
+ findWord grid word =
+   let lines = grid ++ (map reverse grid)
+
+--------------------
+commit 4f323dab14dd312018090603ff882e0a2f1d9613
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 13:21:44 2016 +0000
+
+    findWords using Maybe & catMaybes
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 52689eb..c88620a 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -7,21 +7,24 @@ module Lib
+     ) where
+ 
+ import Data.List (isInfixOf)
++import Data.Maybe (catMaybes)
+ 
+ type Grid = [String]
+ 
+ formatGrid :: Grid -> String
+ formatGrid = unlines
+ 
+--- findWords :: Grid -> [String] -> [String]
++findWords :: Grid -> [String] -> [String]
+ findWords grid words =
+   let findWord' = findWord grid
+-  in map findWord' words
++      foundWords = map findWord' words
++  in catMaybes foundWords
+ 
+-findWord :: Grid -> String -> Bool
++findWord :: Grid -> String -> Maybe String
+ findWord grid word =
+   let lines = grid ++ (map reverse grid)
+-  in or $ map (findWordInLine word) lines
++      foundWord = or $ map (findWordInLine word) lines
++  in if foundWord then Just word else Nothing
+ 
+ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+
+--------------------
+commit 9cc5e68a8d6fc24e117a40f7acfee6cca61f3d75
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 14:14:25 2016 +0000
+
+    diagonal lines
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index c88620a..b6b2781 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -4,9 +4,10 @@ module Lib
+     , findWord
+     , findWordInLine
+     , findWords
++    , getLines
+     ) where
+ 
+-import Data.List (isInfixOf)
++import Data.List (isInfixOf, transpose)
+ import Data.Maybe (catMaybes)
+ 
+ type Grid = [String]
+@@ -22,10 +23,28 @@ findWords grid words =
+ 
+ findWord :: Grid -> String -> Maybe String
+ findWord grid word =
+-  let lines = grid ++ (map reverse grid)
++  let lines = getLines grid
+       foundWord = or $ map (findWordInLine word) lines
+   in if foundWord then Just word else Nothing
+ 
++getLines :: Grid -> [String]
++getLines grid =
++  let horizontal = grid
++      vertical = transpose horizontal
++      diagonal = diagonalize horizontal
++      diagonal' = diagonalize (map reverse horizontal)
++      lines = horizontal ++ vertical ++ diagonal ++ diagonal'
++  in lines ++ (map reverse lines)
++
++diagonalize :: Grid -> Grid
++-- diagonalize grid = transpose (skew grid)
++diagonalize = transpose . skew
++
++skew :: Grid -> Grid
++skew [] = []
++skew (x:xs) = x : skew (map indent xs)
++  where indent line = '_' : line
++
+ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+ -- findWordInLine word line = isInfixOf word line
+
+--------------------
+commit 90d00933ba4abcf2983aefd5c79e7de6af0b8681
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 14:40:23 2016 +0000
+
+    Basic tests
+
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+index 4e217aa..0c8f77a 100644
+--- a/s4/words/app/Main.hs
++++ b/s4/words/app/Main.hs
+@@ -1,32 +1,7 @@
+ module Main where
+ 
+ import Lib
+-
+-grid = [ "__C________R___"
+-       , "__SI________U__"
+-       , "__HASKELL____B_"
+-       , "__A__A_____S__Y"
+-       , "__R___B___C____"
+-       , "__PHP____H_____"
+-       , "____S_LREP_____"
+-       , "____I__M_Y__L__"
+-       , "____L_E__T_O___"
+-       , "_________HB____"
+-       , "_________O_____"
+-       , "________CN_____"
+-       ]
+-
+-languages = [ "BASIC"
+-            , "COBOL"
+-            , "CSHARP"
+-            , "HASKELL"
+-            , "LISP"
+-            , "PERL"
+-            , "PHP"
+-            , "PYTHON"
+-            , "RUBY"
+-            , "SCHEME"
+-            ]
++import Data
+ 
+ main :: IO ()
+ main = putStrLn $ formatGrid grid
+diff --git a/s4/words/src/Data.hs b/s4/words/src/Data.hs
+new file mode 100644
+index 0000000..994a10f
+--- /dev/null
++++ b/s4/words/src/Data.hs
+@@ -0,0 +1,27 @@
++module Data (grid, languages) where
++
++grid = [ "__C________R___"
++       , "__SI________U__"
++       , "__HASKELL____B_"
++       , "__A__A_____S__Y"
++       , "__R___B___C____"
++       , "__PHP____H_____"
++       , "____S_LREP_____"
++       , "____I__M_Y__L__"
++       , "____L_E__T_O___"
++       , "_________HB____"
++       , "_________O_____"
++       , "________CN_____"
++       ]
++
++languages = [ "BASIC"
++            , "COBOL"
++            , "CSHARP"
++            , "HASKELL"
++            , "LISP"
++            , "PERL"
++            , "PHP"
++            , "PYTHON"
++            , "RUBY"
++            , "SCHEME"
++            ]
+diff --git a/s4/words/test/Spec.hs b/s4/words/test/Spec.hs
+index cd4753f..f0a7087 100644
+--- a/s4/words/test/Spec.hs
++++ b/s4/words/test/Spec.hs
+@@ -1,2 +1,19 @@
++import Test.Hspec
++import Lib
++import Data
++
+ main :: IO ()
+-main = putStrLn "Test suite not yet implemented"
++main = hspec $ do
++  describe "formatGrid" $ do
++    it "joins up a grid into a string" $ do
++      formatGrid ["abc", "def", "ghi"] `shouldBe` "abc\ndef\nghi\n"
++
++  describe "findWord" $ do
++    it "finds a word on the grid" $ do
++      findWord grid "HASKELL" `shouldBe` Just "HASKELL"
++      findWord grid "PERL" `shouldBe` Just "PERL"
++      findWord grid "FRENCH" `shouldBe` Nothing
++
++  describe "findWords" $ do
++    it "should find all the words in word-list" $ do
++      findWords grid languages `shouldBe` languages
+diff --git a/s4/words/words.cabal b/s4/words/words.cabal
+index f0acb56..0944772 100644
+--- a/s4/words/words.cabal
++++ b/s4/words/words.cabal
+@@ -16,6 +16,7 @@ cabal-version:       >=1.10
+ library
+   hs-source-dirs:      src
+   exposed-modules:     Lib
++                     , Data
+   build-depends:       base >= 4.7 && < 5
+   default-language:    Haskell2010
+ 
+@@ -33,6 +34,7 @@ test-suite words-test
+   main-is:             Spec.hs
+   build-depends:       base
+                      , words
++                     , hspec
+   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+   default-language:    Haskell2010
+ 
+
+--------------------
+commit ba5f5cbaa0db163c5450cebf6f22860a531d26a4
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 14:57:59 2016 +0000
+
+    Grid with coordinates
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index b6b2781..52efe00 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -5,29 +5,39 @@ module Lib
+     , findWordInLine
+     , findWords
+     , getLines
++    , Cell(Cell)
++    , gridWithCoords
+     ) where
+ 
+ import Data.List (isInfixOf, transpose)
+ import Data.Maybe (catMaybes)
+ 
+-type Grid = [String]
++type Grid a = [[a]]
+ 
+-formatGrid :: Grid -> String
++data Cell = Cell (Int, Int) Char
++            deriving (Eq, Ord, Show)
++
++gridWithCoords :: Grid Char -> Grid Cell
++gridWithCoords grid = zipWith zipRows [0..] grid
++  where zipRows y row = zipWith (zipRow y) [0..] row
++        zipRow y x char = Cell (y, x) char
++
++formatGrid :: Grid Char -> String
+ formatGrid = unlines
+ 
+-findWords :: Grid -> [String] -> [String]
++findWords :: Grid Char -> [String] -> [String]
+ findWords grid words =
+   let findWord' = findWord grid
+       foundWords = map findWord' words
+   in catMaybes foundWords
+ 
+-findWord :: Grid -> String -> Maybe String
++findWord :: Grid Char -> String -> Maybe String
+ findWord grid word =
+   let lines = getLines grid
+       foundWord = or $ map (findWordInLine word) lines
+   in if foundWord then Just word else Nothing
+ 
+-getLines :: Grid -> [String]
++getLines :: Grid Char -> Grid Char
+ getLines grid =
+   let horizontal = grid
+       vertical = transpose horizontal
+@@ -36,11 +46,11 @@ getLines grid =
+       lines = horizontal ++ vertical ++ diagonal ++ diagonal'
+   in lines ++ (map reverse lines)
+ 
+-diagonalize :: Grid -> Grid
++diagonalize :: Grid Char -> Grid Char
+ -- diagonalize grid = transpose (skew grid)
+ diagonalize = transpose . skew
+ 
+-skew :: Grid -> Grid
++skew :: Grid Char -> Grid Char
+ skew [] = []
+ skew (x:xs) = x : skew (map indent xs)
+   where indent line = '_' : line
+
+--------------------
+commit 72af07f1eab5e35ee381ec79cb2a159fb549b912
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 15:35:05 2016 +0000
+
+    findWordInCellInfix
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 52efe00..2d40405 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -7,6 +7,8 @@ module Lib
+     , getLines
+     , Cell(Cell)
+     , gridWithCoords
++    , findWordInCellInfix
++    , findWordInCellPrefix
+     ) where
+ 
+ import Data.List (isInfixOf, transpose)
+@@ -59,3 +61,17 @@ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+ -- findWordInLine word line = isInfixOf word line
+ findWordInLine = isInfixOf
++
++findWordInCellInfix :: String -> [Cell] -> Maybe [Cell]
++findWordInCellInfix _ [] = Nothing
++findWordInCellInfix word line =
++  let foundWord = findWordInCellPrefix [] word line
++  in case foundWord of
++       Nothing -> findWordInCellInfix word (tail line)
++       Just _ -> foundWord
++
++findWordInCellPrefix :: [Cell] -> String -> [Cell] -> Maybe [Cell]
++findWordInCellPrefix acc (s:ss) (c@(Cell _ char):cs) | s == char
++                                  = findWordInCellPrefix (c : acc) ss cs
++findWordInCellPrefix acc []     _ = Just (reverse acc)
++findWordInCellPrefix _    _     _ = Nothing
+
+--------------------
+commit 1d70481f865acca0911533b683e3451f7bb00425
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 15:58:45 2016 +0000
+
+    Find cells (with grid position) instead of words
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 2d40405..f81e5d8 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -9,14 +9,15 @@ module Lib
+     , gridWithCoords
+     , findWordInCellInfix
+     , findWordInCellPrefix
++    , cells2string
+     ) where
+ 
+ import Data.List (isInfixOf, transpose)
+-import Data.Maybe (catMaybes)
++import Data.Maybe (catMaybes, listToMaybe)
+ 
+ type Grid a = [[a]]
+ 
+-data Cell = Cell (Int, Int) Char
++data Cell = Cell (Int, Int) Char | Empty
+             deriving (Eq, Ord, Show)
+ 
+ gridWithCoords :: Grid Char -> Grid Cell
+@@ -27,19 +28,19 @@ gridWithCoords grid = zipWith zipRows [0..] grid
+ formatGrid :: Grid Char -> String
+ formatGrid = unlines
+ 
+-findWords :: Grid Char -> [String] -> [String]
++findWords :: Grid Cell -> [String] -> [[Cell]]
+ findWords grid words =
+   let findWord' = findWord grid
+       foundWords = map findWord' words
+   in catMaybes foundWords
+ 
+-findWord :: Grid Char -> String -> Maybe String
++findWord :: Grid Cell -> String -> Maybe [Cell]
+ findWord grid word =
+   let lines = getLines grid
+-      foundWord = or $ map (findWordInLine word) lines
+-  in if foundWord then Just word else Nothing
++      foundWords = map (findWordInCellInfix word) lines
++  in listToMaybe (catMaybes foundWords)
+ 
+-getLines :: Grid Char -> Grid Char
++getLines :: Grid Cell -> Grid Cell
+ getLines grid =
+   let horizontal = grid
+       vertical = transpose horizontal
+@@ -48,14 +49,14 @@ getLines grid =
+       lines = horizontal ++ vertical ++ diagonal ++ diagonal'
+   in lines ++ (map reverse lines)
+ 
+-diagonalize :: Grid Char -> Grid Char
++diagonalize :: Grid Cell -> Grid Cell
+ -- diagonalize grid = transpose (skew grid)
+ diagonalize = transpose . skew
+ 
+-skew :: Grid Char -> Grid Char
++skew :: Grid Cell -> Grid Cell
+ skew [] = []
+ skew (x:xs) = x : skew (map indent xs)
+-  where indent line = '_' : line
++  where indent line = Empty : line
+ 
+ findWordInLine :: String -> String -> Bool
+ -- findWordInLine word line = word `isInfixOf` line
+@@ -70,8 +71,13 @@ findWordInCellInfix word line =
+        Nothing -> findWordInCellInfix word (tail line)
+        Just _ -> foundWord
+ 
++cell2char (Cell _ c) = c
++cell2char _ = '?'
++
++cells2string = map cell2char
++
+ findWordInCellPrefix :: [Cell] -> String -> [Cell] -> Maybe [Cell]
+-findWordInCellPrefix acc (s:ss) (c@(Cell _ char):cs) | s == char
++findWordInCellPrefix acc (s:ss) (c:cs) | s == cell2char c
+                                   = findWordInCellPrefix (c : acc) ss cs
+ findWordInCellPrefix acc []     _ = Just (reverse acc)
+ findWordInCellPrefix _    _     _ = Nothing
+diff --git a/s4/words/test/Spec.hs b/s4/words/test/Spec.hs
+index f0a7087..97efce5 100644
+--- a/s4/words/test/Spec.hs
++++ b/s4/words/test/Spec.hs
+@@ -1,6 +1,9 @@
+ import Test.Hspec
+ import Lib
+ import Data
++import Data.Maybe
++
++grid' = gridWithCoords grid
+ 
+ main :: IO ()
+ main = hspec $ do
+@@ -9,11 +12,17 @@ main = hspec $ do
+       formatGrid ["abc", "def", "ghi"] `shouldBe` "abc\ndef\nghi\n"
+ 
+   describe "findWord" $ do
+-    it "finds a word on the grid" $ do
+-      findWord grid "HASKELL" `shouldBe` Just "HASKELL"
+-      findWord grid "PERL" `shouldBe` Just "PERL"
+-      findWord grid "FRENCH" `shouldBe` Nothing
++    it "fails to find missing words" $ do
++      testFindWord grid' "HASKELL"
++      testFindWord grid' "PERL"
++
++      findWord grid' "FRENCH" `shouldBe` Nothing
+ 
+   describe "findWords" $ do
+     it "should find all the words in word-list" $ do
+-      findWords grid languages `shouldBe` languages
++      let found = findWords grid' languages
++      map cells2string found `shouldBe` languages
++
++testFindWord grid word = do
++  let found = fromJust (findWord grid word)
++  cells2string found `shouldBe` word
+
+--------------------
+commit 1d5bb900c56856fc5b8faa0d743cdde141328f07
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 21:07:07 2016 +0000
+
+    Create Game type
+
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+index 0c8f77a..98ffeab 100644
+--- a/s4/words/app/Main.hs
++++ b/s4/words/app/Main.hs
+@@ -5,3 +5,5 @@ import Data
+ 
+ main :: IO ()
+ main = putStrLn $ formatGrid grid
++
++g = makeGame grid languages
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index f81e5d8..b2a4919 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -1,11 +1,16 @@
+ module Lib
+-    ( Grid
++    ( Game(Game, gameGrid, gameWords)
++    , makeGame
++    , score
++    , totalWords
++    , playWord
++    , Grid
++    , Cell(Cell)
+     , formatGrid
+     , findWord
+     , findWordInLine
+     , findWords
+     , getLines
+-    , Cell(Cell)
+     , gridWithCoords
+     , findWordInCellInfix
+     , findWordInCellPrefix
+@@ -14,12 +19,41 @@ module Lib
+ 
+ import Data.List (isInfixOf, transpose)
+ import Data.Maybe (catMaybes, listToMaybe)
++import qualified Data.Map as M
++
++data Game = Game { gameGrid  :: Grid Cell
++                 , gameWords :: M.Map String (Maybe [Cell])
++                 }
+ 
+ type Grid a = [[a]]
+ 
+ data Cell = Cell (Int, Int) Char | Empty
+             deriving (Eq, Ord, Show)
+ 
++makeGame :: Grid Char -> [String] -> Game
++makeGame grid words =
++  let grid'  = gridWithCoords grid
++      words' = M.fromList $ map (\word -> (word, Nothing)) words
++  in Game grid' words'
++
++totalWords :: Game -> Int
++totalWords game = length $ M.keys (gameWords game)
++
++score :: Game -> Int
++score game = length $ catMaybes $ M.elems (gameWords game)
++
++playWord :: Game -> String -> Game
++playWord game word =
++  let grid = gameGrid game
++      foundWord = findWord grid word
++      newGame = case foundWord of
++        Nothing -> game
++        Just cs ->
++          let words = gameWords game
++              words' = M.insert word foundWord words
++          in Game grid words'
++  in newGame
++
+ gridWithCoords :: Grid Char -> Grid Cell
+ gridWithCoords grid = zipWith zipRows [0..] grid
+   where zipRows y row = zipWith (zipRow y) [0..] row
+diff --git a/s4/words/test/Spec.hs b/s4/words/test/Spec.hs
+index 97efce5..2eaa7f0 100644
+--- a/s4/words/test/Spec.hs
++++ b/s4/words/test/Spec.hs
+@@ -3,7 +3,8 @@ import Lib
+ import Data
+ import Data.Maybe
+ 
+-grid' = gridWithCoords grid
++game = makeGame grid languages
++grid' = gameGrid game
+ 
+ main :: IO ()
+ main = hspec $ do
+diff --git a/s4/words/words.cabal b/s4/words/words.cabal
+index 0944772..f10534c 100644
+--- a/s4/words/words.cabal
++++ b/s4/words/words.cabal
+@@ -18,6 +18,7 @@ library
+   exposed-modules:     Lib
+                      , Data
+   build-depends:       base >= 4.7 && < 5
++                     , containers
+   default-language:    Haskell2010
+ 
+ executable words-exe
+
+--------------------
+commit 17a9f3ece7e0b47353eb36555da658af8c16a0c1
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 23:47:15 2016 +0000
+
+    playGame function with I/O
+
+diff --git a/s4/words/app/Main.hs b/s4/words/app/Main.hs
+index 98ffeab..967e692 100644
+--- a/s4/words/app/Main.hs
++++ b/s4/words/app/Main.hs
+@@ -3,7 +3,8 @@ module Main where
+ import Lib
+ import Data
+ 
++g = makeGame grid languages
++
+ main :: IO ()
+-main = putStrLn $ formatGrid grid
++main = playGame g
+ 
+-g = makeGame grid languages
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index b2a4919..54a12bd 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -4,6 +4,7 @@ module Lib
+     , score
+     , totalWords
+     , playWord
++    , playGame
+     , Grid
+     , Cell(Cell)
+     , formatGrid
+@@ -17,6 +18,7 @@ module Lib
+     , cells2string
+     ) where
+ 
++import System.IO
+ import Data.List (isInfixOf, transpose)
+ import Data.Maybe (catMaybes, listToMaybe)
+ import qualified Data.Map as M
+@@ -43,6 +45,7 @@ score :: Game -> Int
+ score game = length $ catMaybes $ M.elems (gameWords game)
+ 
+ playWord :: Game -> String -> Game
++playWord game word | not (M.member word (gameWords game)) = game
+ playWord game word =
+   let grid = gameGrid game
+       foundWord = findWord grid word
+@@ -54,13 +57,30 @@ playWord game word =
+           in Game grid words'
+   in newGame
+ 
++playGame game = do
++  let grid = gameGrid game
++      words = gameWords game
++      s = score game
++      t = totalWords game
++  putStrLn ((show s) ++ "/" ++ (show t))
++  if s < t then do
++    putStr (formatGrid grid)
++    putStr "Enter a word> "
++    word <- getLine
++    let newGame = playWord game word
++    playGame newGame
++  else
++    putStrLn "Congratulations!"
++
+ gridWithCoords :: Grid Char -> Grid Cell
+ gridWithCoords grid = zipWith zipRows [0..] grid
+   where zipRows y row = zipWith (zipRow y) [0..] row
+         zipRow y x char = Cell (y, x) char
+ 
+-formatGrid :: Grid Char -> String
+-formatGrid = unlines
++formatGrid :: Grid Cell -> String
++formatGrid grid =
++  let charGrid = map (map cell2char) grid
++  in unlines charGrid
+ 
+ findWords :: Grid Cell -> [String] -> [[Cell]]
+ findWords grid words =
+
+--------------------
+commit b12fd4262bafa6fb6362a858786fc6e390b36926
+Author: Hakim Cassimally <hakim.cassimally@gmail.com>
+Date:   Sun Nov 6 23:47:53 2016 +0000
+
+    Don't buffer stdout
+    
+    Though everything worked fine in ghci, we need this for
+    the compiled executable, as ghc applies different buffering
+    by defualt!
+
+diff --git a/s4/words/src/Lib.hs b/s4/words/src/Lib.hs
+index 54a12bd..3b241c5 100644
+--- a/s4/words/src/Lib.hs
++++ b/s4/words/src/Lib.hs
+@@ -62,6 +62,7 @@ playGame game = do
+       words = gameWords game
+       s = score game
+       t = totalWords game
++  hSetBuffering stdout NoBuffering
+   putStrLn ((show s) ++ "/" ++ (show t))
+   if s < t then do
+     putStr (formatGrid grid)

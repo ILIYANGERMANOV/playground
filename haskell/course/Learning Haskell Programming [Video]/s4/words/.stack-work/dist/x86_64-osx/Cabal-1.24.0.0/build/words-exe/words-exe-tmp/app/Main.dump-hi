@@ -1,0 +1,99 @@
+
+==================== FINAL INTERFACE ====================
+2016-11-08 20:41:11.127537 UTC
+
+interface main@main:Main 8001
+  interface hash: 164f89cf819aec29b6661551de03bd79
+  ABI hash: e5e4f220938c400906e6533ca402fa78
+  export-list hash: fe2c7dadc4380e232180e9be73955845
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: a40fde350fa7dff6393ec48b4d511226
+  sig of: Nothing
+  used TH splices: False
+  where
+exports:
+  Main.g
+  Main.main
+module dependencies:
+package dependencies: array-0.5.1.1@array-0.5.1.1 base-4.9.0.0*
+                      containers-0.5.7.1@containers-0.5.7.1
+                      deepseq-1.4.2.0@deepseq-1.4.2.0 ghc-prim-0.5.0.0
+                      integer-gmp-1.0.0.1
+                      words-0.1.0.0@words-0.1.0.0-xkNiZFGuigI4hYI1dNhhM
+orphans: base-4.9.0.0:GHC.Base base-4.9.0.0:GHC.Float
+family instance modules: base-4.9.0.0:Control.Applicative
+                         base-4.9.0.0:Data.Complex base-4.9.0.0:Data.Either
+                         base-4.9.0.0:Data.Functor.Const base-4.9.0.0:Data.Functor.Identity
+                         base-4.9.0.0:Data.List.NonEmpty base-4.9.0.0:Data.Monoid
+                         base-4.9.0.0:Data.Semigroup base-4.9.0.0:Data.Type.Equality
+                         base-4.9.0.0:Data.Version base-4.9.0.0:Data.Void
+                         base-4.9.0.0:GHC.Exts base-4.9.0.0:GHC.Generics
+                         base-4.9.0.0:GHC.IO.Exception base-4.9.0.0:GHC.TypeLits
+                         containers-0.5.7.1@containers-0.5.7.1:Data.Map.Base
+                         containers-0.5.7.1@containers-0.5.7.1:Data.Set.Base
+import  -/  base-4.9.0.0:Prelude b9bddb97799837fe67a8d00939a5b6c3
+import  -/  ghc-prim-0.5.0.0:GHC.Types 7378e41b7749213c8c88ceb6b0665d4c
+import  -/  words-0.1.0.0@words-0.1.0.0-xkNiZFGuigI4hYI1dNhhM:Data 1e9e1380ef2372dbabfa21dc61a5b6fe
+import  -/  words-0.1.0.0@words-0.1.0.0-xkNiZFGuigI4hYI1dNhhM:Lib 319d6c5a746bcb5429c722242e47f9a6
+d6831ef04cb9301b090dfae6f7bb7ec7
+  $trModule :: GHC.Types.Module
+  {- HasNoCafRefs, Strictness: m,
+     Unfolding: (GHC.Types.Module Main.$trModule2 Main.$trModule1) -}
+847d9fc3b8e6f0b424199f36b4999bb2
+  $trModule1 :: GHC.Types.TrName
+  {- HasNoCafRefs, Strictness: m1,
+     Unfolding: (GHC.Types.TrNameS "Main"#) -}
+24ef6042833e75ffd7aa98b83ecca98d
+  $trModule2 :: GHC.Types.TrName
+  {- HasNoCafRefs, Strictness: m1,
+     Unfolding: (GHC.Types.TrNameS "main"#) -}
+3be6db8799c84e65c63b3611c99b4659
+  g :: Lib.Game
+  {- Strictness: m, Unfolding: (Lib.Game Main.g3 Main.g1) -}
+2684f6eaac37ca999c59fdee2109fc86
+  g1 :: Data.Map.Base.Map GHC.Base.String (GHC.Base.Maybe [Lib.Cell])
+  {- Unfolding: (Lib.$sfromList
+                   @ (GHC.Base.Maybe [Lib.Cell])
+                   Main.g2) -}
+744832bfa3e915d32739409c7702c01a
+  g2 :: [(GHC.Base.String, GHC.Base.Maybe [Lib.Cell])]
+  {- Unfolding: (GHC.Base.map
+                   @ [GHC.Types.Char]
+                   @ (GHC.Base.String, GHC.Base.Maybe [Lib.Cell])
+                   Lib.makeGame1
+                   Data.languages) -}
+5a0778f6c0c116e9126eb57934fb2994
+  g3 :: [[Lib.Cell]]
+  {- Unfolding: (GHC.List.zipWith
+                   @ GHC.Types.Int
+                   @ [GHC.Types.Char]
+                   @ [Lib.Cell]
+                   Lib.gridWithCoords2
+                   Lib.gridWithCoords1
+                   Data.grid) -}
+996d49c0691418f8b943971be8e3baad
+  main :: GHC.Types.IO ()
+  {- Arity: 1,
+     Unfolding: InlineRule (0, True, True)
+                Main.main1 `cast` (Sym (GHC.Types.N:IO[0] <()>_R)) -}
+64a616716e866cefb400983f1434bc5e
+  main1 ::
+    GHC.Prim.State# GHC.Prim.RealWorld
+    -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #)
+  {- Arity: 1, Unfolding: (Lib.playGame1 Main.g) -}
+a047495e75142bf298f0a014520d856e
+  main2 ::
+    GHC.Prim.State# GHC.Prim.RealWorld
+    -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #)
+  {- Arity: 1,
+     Unfolding: (GHC.TopHandler.runMainIO1
+                   @ ()
+                   Main.main1 `cast` (Sym (GHC.Types.N:IO[0] <()>_R))) -}
+vectorised variables:
+vectorised tycons:
+vectorised reused tycons:
+parallel variables:
+parallel tycons:
+trusted: safe
+require own pkg trusted: False
+

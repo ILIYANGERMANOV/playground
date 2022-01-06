@@ -1,7 +1,3 @@
-module Main where
+dollarSign c = c ++ 's'
 
-double x = x + x
-
-power x = x * x
-
-main = print $ map (power . double) [5,7,9]
+main = putStrLn $ map (dollarSign) "Hello world!"

@@ -1,0 +1,14 @@
+for f in ./app/Main.hs ./src/Data.hs ./src/Lib.hs ./test/Spec.hs
+do
+  echo
+  echo --------------------
+  echo -- $f
+  cat $f
+done
+
+for c in $(git log --pretty=format:%h --reverse)
+do
+  echo
+  echo --------------------
+  git show $c | cat
+done
