@@ -41,6 +41,7 @@ enterGame game p = game {
   ps = let gamePs = ps game in
       case gamePs of
           [] -> [p]
+          -- TODO: validate participant
           _ -> (p : gamePs)
 }
 
@@ -77,8 +78,11 @@ vote game p v = game {
   votes = let gVotes = votes game in
         case gVotes of
           [] -> [v]
-          _ -> (v : gVotes)
+          gvs | invalidVote gvs -> gvs
+              | otherwise -> (v : gVotes)
 }
+
+invalidVote gvs = True
 
 votesFor :: NFT -> Game -> [Vote]
 votesFor nft game = filter (\v -> nomNftId v == nftId nft) $ votes game
