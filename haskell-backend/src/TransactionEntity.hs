@@ -8,18 +8,16 @@
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module Database where
+module TransactionEntity where
 
 import           Data.Text        (Text)
+import           Database.DbCore
 import           GHC.Generics     (Generic)
 import           Hasql.Connection as Connection
 import           Hasql.Session
 import           Hasql.Statement
 import           Prelude
 import           Rel8
-
-test :: Integer
-test = 1
 
 data Transaction f =
   Transaction
@@ -41,25 +39,5 @@ transactionSchema =
         Transaction {trnId = "id", trnTitle = "title", trnAmount = "amount"}
     }
 
-connectionSettings :: Connection.Settings
-connectionSettings =
-  Connection.settings
-    "localhost"
-    5432
-    "iliyan"
-    "localivydbpassSECUR3"
-    "ivy-local"
-
-connectToDb :: IO Connection
-connectToDb = do
-  Right conn <- acquire connectionSettings
-  return conn
-
-execute :: Statement () a -> IO (Either QueryError a)
-execute stm = do
-  conn <- connectToDb
-  let preparedStm = statement () stm
-  run preparedStm conn
-
-allTrns :: Statement () [Transaction Result]
-allTrns = select $ each transactionSchema
+allTransactions :: Statement () [Transaction Result]
+allTransactions = select $ each transactionSchema
