@@ -38,8 +38,8 @@ executables:
     - aeson >=1.4.1.0 && <1.6 || >=2.0.0.0 && <2.1
     - servant 
     - servant-server
-    - postgresql-simple
-
+    - rel8
+    
 tests:
   haskell-backend-test:
     main:                Spec.hs

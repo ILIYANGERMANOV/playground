@@ -3,6 +3,11 @@ module Lib
       NFT (NFT)
     ) where
 
+
+data ApprovalAction = Approve{
+  signature :: String
+} | Reject
+
 data NFT = NFT {
   nftId :: String,
   ipfs :: String
@@ -35,6 +40,14 @@ data Game = Game {
 
 newGame :: Game
 newGame = Game "game" [] [] (PrizeCuts 0.6 0.24 0.1 0.06)
+
+
+sum :: [Int] -> Int
+sum [] = 0
+sum [x] = x
+sum (x: xs) = x + sum xs 
+
+
 
 enterGame :: Game -> Participant -> Game
 enterGame game p = game {

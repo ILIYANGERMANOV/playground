@@ -3,7 +3,21 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: rel8-1.2.2.0@sha256:5c410778b3051ca0dfd266453a5aea4ca6749b4cc4cccdb301ad64d5142d1a18,5071
+    pantry-tree:
+      size: 9161
+      sha256: a6f80315b81f65beddd1ed11ae58cf4168712b1482bdf9e96a989fffabe28b26
+  original:
+    hackage: rel8-1.2.2.0@sha256:5c410778b3051ca0dfd266453a5aea4ca6749b4cc4cccdb301ad64d5142d1a18,5071
+- completed:
+    hackage: opaleye-0.8.0.1@sha256:2c518a4fe8672600ea9c8b6fadbfbb708c8fef286f3bc8bc1cc530fc344c25b4,5801
+    pantry-tree:
+      size: 5662
+      sha256: 23a1314294103065989ebaa7717af2aa3f1595c7fff23c8eea7c1836ddce5a04
+  original:
+    hackage: opaleye-0.8.0.1@sha256:2c518a4fe8672600ea9c8b6fadbfbb708c8fef286f3bc8bc1cc530fc344c25b4,5801
 snapshots:
 - completed:
     size: 587393
