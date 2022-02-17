@@ -1,35 +1,33 @@
-{-# language BlockArguments #-}
-{-# language DeriveAnyClass #-}
-{-# language DeriveGeneric #-}
-{-# language DerivingStrategies #-}
-{-# language DerivingVia #-}
-{-# language DuplicateRecordFields #-}
-{-# language GeneralizedNewtypeDeriving #-}
-{-# language OverloadedStrings #-}
-{-# language StandaloneDeriving #-}
-{-# language TypeApplications #-}
-{-# language TypeFamilies #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Database where
 
-import Prelude
-import Data.Text
-import GHC.Generics
-import qualified Hasql.Session as Session
-import qualified Hasql.Connection as Connection
+import Data.Text ( Text )
+import GHC.Generics ( Generic )
 import Rel8
+import Prelude
+import Hasql.Session
+import Hasql.Statement
+import Hasql.Connection as Connection
 
 test :: Integer
 test = 1
 
 data Transaction f = Transaction
-  { 
-      trnId       :: Column f Text
-    , trnTitle    :: Column f (Maybe Text) 
+  { trnId :: Column f Text,
+    trnTitle :: Column f (Maybe Text)
   }
   deriving stock (Generic)
   deriving anyclass (Rel8able)
@@ -37,19 +35,27 @@ data Transaction f = Transaction
 deriving stock instance f ~ Result => Show (Transaction f)
 
 transactionSchema :: TableSchema (Transaction Name)
-transactionSchema = TableSchema
-  { name = "wallet_transactions"
-  , schema = Nothing
-  , columns = Transaction
-      { trnId = "id"
-      , trnTitle = "title"
-      }
-  }
+transactionSchema =
+  TableSchema
+    { name = "wallet_transactions",
+      schema = Nothing,
+      columns =
+        Transaction
+          { trnId = "id",
+            trnTitle = "title"
+          }
+    }
 
-
+connectionSettings :: Connection.Settings
 connectionSettings = Connection.settings "localhost" 5432 "iliyan" "pass" "ivy-local"
 
--- connect = do
---     Right conn <- Connection.acquire connectionSettings
---     trns <- select $ each transactionSchema
---     putStrLn "OK"
+execute :: Statement () [Transaction Result] -> IO (Either QueryError  [Transaction Result])
+execute stm = do
+    Right conn <- acquire connectionSettings
+    let preparedStm = statement () stm
+    result <- run preparedStm conn
+    return result
+
+allTrns :: Statement () [Transaction Result]
+allTrns = select $ each transactionSchema
+

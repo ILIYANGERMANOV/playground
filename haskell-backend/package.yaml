@@ -26,6 +26,9 @@ dependencies:
   - servant-server
   - rel8
   - hasql
+  - hasql-transaction
+  # - hasql-migration
+  - hasql-pool
   - text
 
 default-extensions:

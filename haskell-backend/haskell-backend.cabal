@@ -36,6 +36,8 @@ library
       aeson >=1.4.1.0 && <1.6 || >=2.0.0.0 && <2.1
     , base >=4.6.0.0 && <4.17
     , hasql
+    , hasql-pool
+    , hasql-transaction
     , rel8
     , servant
     , servant-server
@@ -56,6 +58,8 @@ executable haskell-backend-exe
     , base >=4.6.0.0 && <4.17
     , haskell-backend
     , hasql
+    , hasql-pool
+    , hasql-transaction
     , rel8
     , servant
     , servant-server
@@ -77,6 +81,8 @@ test-suite haskell-backend-test
     , base >=4.6.0.0 && <4.17
     , haskell-backend
     , hasql
+    , hasql-pool
+    , hasql-transaction
     , rel8
     , servant
     , servant-server
