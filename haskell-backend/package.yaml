@@ -24,6 +24,16 @@ dependencies:
 
 library:
   source-dirs: src
+  ghc-options:
+  - -threaded
+  - -rtsopts
+  - -with-rtsopts=-N
+  dependencies:
+  - aeson >=1.4.1.0 && <1.6 || >=2.0.0.0 && <2.1
+  - servant 
+  - servant-server
+  - rel8
+  - text
 
 executables:
   haskell-backend-exe:
@@ -35,10 +45,6 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - haskell-backend
-    - aeson >=1.4.1.0 && <1.6 || >=2.0.0.0 && <2.1
-    - servant 
-    - servant-server
-    - rel8
     
 tests:
   haskell-backend-test:
