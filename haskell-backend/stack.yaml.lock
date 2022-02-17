@@ -5,19 +5,19 @@
 
 packages:
 - completed:
-    hackage: rel8-1.2.2.0@sha256:5c410778b3051ca0dfd266453a5aea4ca6749b4cc4cccdb301ad64d5142d1a18,5071
+    hackage: rel8-1.2.0.0@sha256:d540fbfb967bf7eed23a1e7df24ef17424ed25575ab05a86a2cf213b2e6d6940,5045
     pantry-tree:
-      size: 9161
-      sha256: a6f80315b81f65beddd1ed11ae58cf4168712b1482bdf9e96a989fffabe28b26
+      size: 9027
+      sha256: a037ef16fed5785e57d68a83721fa2b0cfc47ce8ed7a128be0149455797c2d76
   original:
-    hackage: rel8-1.2.2.0@sha256:5c410778b3051ca0dfd266453a5aea4ca6749b4cc4cccdb301ad64d5142d1a18,5071
+    hackage: rel8-1.2.0.0
 - completed:
-    hackage: opaleye-0.8.0.1@sha256:2c518a4fe8672600ea9c8b6fadbfbb708c8fef286f3bc8bc1cc530fc344c25b4,5801
+    hackage: hasql-1.4.5.1@sha256:1d202eeb12a409c1d7f75c5440780ff3caed2cd8f470ec80f01748e0b9e388f0,6581
     pantry-tree:
-      size: 5662
-      sha256: 23a1314294103065989ebaa7717af2aa3f1595c7fff23c8eea7c1836ddce5a04
+      size: 2567
+      sha256: 98e50d3d938e4f62fd60d686e70622bc3da689734bf2e00b2e94fcb501b4c6ed
   original:
-    hackage: opaleye-0.8.0.1@sha256:2c518a4fe8672600ea9c8b6fadbfbb708c8fef286f3bc8bc1cc530fc344c25b4,5801
+    hackage: hasql-1.4.5.1
 snapshots:
 - completed:
     size: 587393

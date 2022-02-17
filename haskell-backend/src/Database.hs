@@ -1,24 +1,27 @@
-{-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DerivingVia #-}
+{-# language BlockArguments #-}
+{-# language DeriveAnyClass #-}
+{-# language DeriveGeneric #-}
+{-# language DerivingStrategies #-}
+{-# language DerivingVia #-}
+{-# language DuplicateRecordFields #-}
+{-# language GeneralizedNewtypeDeriving #-}
+{-# language OverloadedStrings #-}
+{-# language StandaloneDeriving #-}
+{-# language TypeApplications #-}
+{-# language TypeFamilies #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Database
-  ( test,
-  )
-where
+module Database where
 
 import Prelude
-import Rel8
 import Data.Text
 import GHC.Generics
+import qualified Hasql.Session as Session
+import qualified Hasql.Connection as Connection
+import Rel8
 
 test :: Integer
 test = 1
@@ -42,3 +45,11 @@ transactionSchema = TableSchema
       , trnTitle = "title"
       }
   }
+
+
+connectionSettings = Connection.settings "localhost" 5432 "iliyan" "pass" "ivy-local"
+
+-- connect = do
+--     Right conn <- Connection.acquire connectionSettings
+--     trns <- select $ each transactionSchema
+--     putStrLn "OK"
