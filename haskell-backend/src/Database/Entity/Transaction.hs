@@ -8,7 +8,7 @@
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module TransactionEntity where
+module Database.Entity.Transaction where
 
 import           Data.Text        (Text)
 import           Database.DbCore

@@ -26,7 +26,8 @@ source-repository head
 library
   exposed-modules:
       Database.DbCore
-      TransactionEntity
+      Database.Entity.Transaction
+      Server
   other-modules:
       Paths_haskell_backend
   hs-source-dirs:
