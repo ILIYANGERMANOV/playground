@@ -27,9 +27,10 @@ dependencies:
   - rel8
   - hasql
   - hasql-transaction
-  # - hasql-migration
   - hasql-pool
   - text
+  - wai
+  - warp
 
 default-extensions:
 - OverloadedStrings
