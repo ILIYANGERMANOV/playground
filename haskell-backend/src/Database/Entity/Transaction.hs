@@ -19,25 +19,25 @@ import           Hasql.Statement
 import           Prelude
 import           Rel8
 
-data Transaction f =
-  Transaction
-    { trnId     :: Column f Text
-    , trnTitle  :: Column f (Maybe Text)
-    , trnAmount :: Column f Double
+data TransactionEntity f =
+  TransactionEntity
+    { _id     :: Column f Text
+    , _title  :: Column f (Maybe Text)
+    , _amount :: Column f Double
     }
   deriving (Generic)
   deriving anyclass (Rel8able)
 
-deriving stock instance f ~ Result => Show (Transaction f)
+deriving stock instance f ~ Result => Show (TransactionEntity f)
 
-transactionSchema :: TableSchema (Transaction Name)
+transactionSchema :: TableSchema (TransactionEntity Name)
 transactionSchema =
   TableSchema
     { name = "wallet_transactions"
     , schema = Nothing
     , columns =
-        Transaction {trnId = "id", trnTitle = "title", trnAmount = "amount"}
+        TransactionEntity {_id = "id", _title = "title", _amount = "amount"}
     }
 
-allTransactions :: Statement () [Transaction Result]
+allTransactions :: Statement () [TransactionEntity Result]
 allTransactions = select $ each transactionSchema

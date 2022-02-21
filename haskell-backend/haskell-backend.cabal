@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Api.TransactionsApi
       Database.DbCore
       Database.Entity.Transaction
       Server
@@ -44,6 +45,7 @@ library
     , servant
     , servant-server
     , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010
@@ -68,6 +70,7 @@ executable haskell-backend-exe
     , servant
     , servant-server
     , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010
@@ -93,6 +96,7 @@ test-suite haskell-backend-test
     , servant
     , servant-server
     , text
+    , transformers
     , wai
     , warp
   default-language: Haskell2010

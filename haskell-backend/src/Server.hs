@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PolyKinds         #-}
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
@@ -20,10 +19,9 @@ import           Servant.API.Generic
 import           Servant.Server.Generic   ()
 
 -- | A greet message data type
-newtype Greet =
-  Greet
-    { _msg :: Text
-    }
+newtype Greet = Greet { 
+    _msg :: Text
+  } 
   deriving (Generic, Show)
 
 instance FromJSON Greet
@@ -67,9 +65,13 @@ server = helloH :<|> postGreetH :<|> deleteGreetH :<|> personH
     helloH name Nothing      = helloH name (Just False)
     helloH name (Just False) = return . Greet $ "Hello, " <> name
     helloH name (Just True)  = return . Greet . toUpper $ "Hello, " <> name
+    
     postGreetH greet = return greet
+    
     deleteGreetH _ = return NoContent
-    personH = return $ Person "Iliyan" 25 
+    
+personH :: Handler Person
+personH = return $ Person "Iliyan" 25 
 
 -- Turn the server into a WAI app. 'serve' is provided by servant,
 -- more precisely by the Servant.Server module.
