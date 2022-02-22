@@ -35,9 +35,6 @@ instance FromJSON Transaction
 
 instance ToJSON Transaction
 
-getTransactionsH :: Handler (IO [Transaction])
-getTransactionsH = return getTransactions
-
 getTransactions :: IO [Transaction]
 getTransactions = do
   Right trns <- liftIO $ executeQuery allTransactions

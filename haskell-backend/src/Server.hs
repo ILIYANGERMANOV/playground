@@ -17,11 +17,14 @@ import           Prelude
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic   ()
+import Api.TransactionsApi
+import Control.Monad.IO.Class
+
 
 -- | A greet message data type
-newtype Greet = Greet { 
+newtype Greet = Greet {
     _msg :: Text
-  } 
+  }
   deriving (Generic, Show)
 
 instance FromJSON Greet
@@ -49,6 +52,7 @@ type TestApi
        -- DELETE /greet/:greetid
       :<|> "greet" :> Capture "greetid" Text :> Delete '[ JSON] NoContent
       :<|> "person" :> Get '[ JSON] Person
+      :<|> "transactions" :> Get '[ JSON] [Transaction]
 
 testApi :: Proxy TestApi
 testApi = Proxy
@@ -60,20 +64,23 @@ testApi = Proxy
 --
 -- Each handler runs in the 'Handler' monad.
 server :: Server TestApi
-server = helloH :<|> postGreetH :<|> deleteGreetH :<|> personH
+server = helloH :<|> postGreetH :<|> deleteGreetH :<|> personH :<|> transactionsH
   where
     helloH :: Text -> Maybe Bool -> Handler Greet
     helloH name Nothing      = helloH name (Just False)
     helloH name (Just False) = return . Greet $ "Hello, " <> name
     helloH name (Just True)  = return . Greet . toUpper $ "Hello, " <> name
-    
+
     postGreetH :: Greet -> Handler Greet
     postGreetH greet = return greet
-    
+
     deleteGreetH _ = return NoContent
-    
+
 personH :: Handler Person
-personH = return $ Person "Iliyan" 25 
+personH = return $ Person "Iliyan" 25
+
+transactionsH :: Handler [Transaction]
+transactionsH = liftIO getTransactions
 
 -- Turn the server into a WAI app. 'serve' is provided by servant,
 -- more precisely by the Servant.Server module.
