@@ -62,10 +62,12 @@ testApi = Proxy
 server :: Server TestApi
 server = helloH :<|> postGreetH :<|> deleteGreetH :<|> personH
   where
+    helloH :: Text -> Maybe Bool -> Handler Greet
     helloH name Nothing      = helloH name (Just False)
     helloH name (Just False) = return . Greet $ "Hello, " <> name
     helloH name (Just True)  = return . Greet . toUpper $ "Hello, " <> name
     
+    postGreetH :: Greet -> Handler Greet
     postGreetH greet = return greet
     
     deleteGreetH _ = return NoContent
