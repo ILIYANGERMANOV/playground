@@ -21,8 +21,6 @@ import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic      ()
 
-type AppM a = IO (Handler a)
-
 data Transaction =
   Transaction
     { trnId     :: Text
@@ -32,12 +30,11 @@ data Transaction =
   deriving (Generic, Show)
 
 instance FromJSON Transaction
-
 instance ToJSON Transaction
 
 getTransactions :: IO [Transaction]
 getTransactions = do
-  Right trns <- liftIO $ executeQuery allTransactions
+  Right trns <- executeQuery allTransactions
   return $
     Prelude.map
       (\t ->
