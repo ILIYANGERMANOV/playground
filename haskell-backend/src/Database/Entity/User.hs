@@ -23,8 +23,10 @@ import           Rel8
 import Data.Int (Int32)
 
 data AuthProviderType = IVY | GOOGLE
+    deriving (Generic)
     deriving stock (Read, Show)
     deriving DBType via ReadShow AuthProviderType
+
 
 data UserEntity f =
   UserEntity

@@ -30,6 +30,8 @@ library
       Database.DbCore
       Database.Entity.Transaction
       Database.Entity.User
+      Logic.Data.User
+      Logic.IvyAuth
       Server
   other-modules:
       Paths_haskell_backend
