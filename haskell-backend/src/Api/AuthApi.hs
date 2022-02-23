@@ -22,6 +22,11 @@ import           Prelude
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic   ()
+import Database.DbCore
+import Database.Entity.User
+import Logic.Utils
+import Data.Password.Bcrypt
+import Data.UUID.V4
 
 data SignUpRequest =
   SignUpRequest
@@ -61,5 +66,17 @@ signUp req = do
     Right req            -> signUpValidated req
 
 signUpValidated :: SignUpRequest -> IO (Either Text AuthResponse)
-signUpValidated req = undefined
+signUpValidated req = do
+  Right users <- executeQuery $ userByEmail (email req)
+  case safeHead users of
+    Just _ -> return $ Left "User already exists."
+    Nothing -> registerNewUser req
+
+
+registerNewUser :: SignUpRequest -> IO (Either Text AuthResponse)
+registerNewUser req = do
+  hashedPass <- hashPassword $ mkPassword (password req)
+  uuid <- nextRandom
+
+  undefined 
   

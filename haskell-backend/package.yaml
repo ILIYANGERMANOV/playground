@@ -32,6 +32,8 @@ dependencies:
   - wai
   - warp
   - transformers
+  - uuid
+  - password
 
 default-extensions:
 - OverloadedStrings

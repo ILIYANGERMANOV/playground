@@ -28,10 +28,12 @@ library
       Api.AuthApi
       Api.TransactionsApi
       Database.DbCore
+      Database.Entity.AuthProviderType
       Database.Entity.Transaction
       Database.Entity.User
       Logic.Data.User
       Logic.IvyAuth
+      Logic.Utils
       Logic.Validation
       Server
   other-modules:
@@ -46,11 +48,13 @@ library
     , hasql
     , hasql-pool
     , hasql-transaction
+    , password
     , rel8
     , servant
     , servant-server
     , text
     , transformers
+    , uuid
     , wai
     , warp
   default-language: Haskell2010
@@ -71,11 +75,13 @@ executable haskell-backend-exe
     , hasql
     , hasql-pool
     , hasql-transaction
+    , password
     , rel8
     , servant
     , servant-server
     , text
     , transformers
+    , uuid
     , wai
     , warp
   default-language: Haskell2010
@@ -97,11 +103,13 @@ test-suite haskell-backend-test
     , hasql
     , hasql-pool
     , hasql-transaction
+    , password
     , rel8
     , servant
     , servant-server
     , text
     , transformers
+    , uuid
     , wai
     , warp
   default-language: Haskell2010
