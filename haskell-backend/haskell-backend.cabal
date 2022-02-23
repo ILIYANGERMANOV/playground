@@ -32,6 +32,7 @@ library
       Database.Entity.User
       Logic.Data.User
       Logic.IvyAuth
+      Logic.Validation
       Server
   other-modules:
       Paths_haskell_backend

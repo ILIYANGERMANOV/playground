@@ -17,13 +17,12 @@ import           Database.Entity.User
 import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp ()
-import           Prelude hiding (id)
+import           Prelude                  hiding (id)
+import           Rel8                     (Result)
 import           Servant
 import           Servant.API.Generic
 import           Servant.Server.Generic   ()
-import           Rel8 (Result)
 
-import Database.Entity.User 
 data User =
   User
     { id                :: Text
@@ -40,21 +39,24 @@ data User =
   deriving (Generic, Show)
 
 instance FromJSON AuthProviderType
+
 instance ToJSON AuthProviderType
 
 instance FromJSON User
+
 instance ToJSON User
 
 toUser :: UserEntity Rel8.Result -> User
-toUser e = User {
-    id = _id e,
-    email = _email e,
-    passwordHash = _passwordHash e,
-    authProviderType = _authProviderType e,
-    firstName = _firstName e,
-    lastName = _lastName e,
-    profilePictureUrl = _profilePictureUrl e,
-    color = _color e,
-    endColor = _endColor e,
-    testUser = _testUser e
-}
+toUser e =
+  User
+    { id = _id e
+    , email = _email e
+    , passwordHash = _passwordHash e
+    , authProviderType = _authProviderType e
+    , firstName = _firstName e
+    , lastName = _lastName e
+    , profilePictureUrl = _profilePictureUrl e
+    , color = _color e
+    , endColor = _endColor e
+    , testUser = _testUser e
+    }

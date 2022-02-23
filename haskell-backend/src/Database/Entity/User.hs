@@ -68,3 +68,10 @@ userSchema =
 
 allUsers :: Statement () [UserEntity Result]
 allUsers = select $ each userSchema
+
+-- getUserById :: Text -> Statement () [UserEntity Result]
+-- getUserById userId = select $ getUserByIdQuery userId
+
+getUserByIdQuery userId = do
+      user <- each userSchema
+      where_ $ _id user ==. lit userId
