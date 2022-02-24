@@ -8,25 +8,29 @@
 module Api.AuthApi where
 
 import           Api.TransactionsApi
-import           Control.Monad            (guard)
+import           Control.Monad                    (guard)
 import           Control.Monad.IO.Class
 import           Data.Aeson
+import           Data.Int                         (Int32)
+import           Data.Password.Bcrypt
 import           Data.Proxy
 import           Data.Text
+import           Data.UUID
+import           Data.UUID.V4
+import           Database.DbCore
+import           Database.Entity.AuthProviderType
+import           Database.Entity.User
 import           GHC.Generics
-import           Logic.Data.User          hiding (email, firstName)
+import           Logic.Data.User                  (User (profilePictureUrl))
+import qualified Logic.Data.User                  as U
+import           Logic.Utils
 import           Logic.Validation
 import           Network.Wai
 import           Network.Wai.Handler.Warp
-import           Prelude
+import           Prelude                          hiding (id)
 import           Servant
 import           Servant.API.Generic
-import           Servant.Server.Generic   ()
-import Database.DbCore
-import Database.Entity.User
-import Logic.Utils
-import Data.Password.Bcrypt
-import Data.UUID.V4
+import           Servant.Server.Generic           ()
 
 data SignUpRequest =
   SignUpRequest
@@ -34,7 +38,7 @@ data SignUpRequest =
     , password  :: Text
     , firstName :: Text
     , lastName  :: Maybe Text
-    , color     :: Int
+    , color     :: Int32
     , fcmToken  :: Maybe Text
     }
   deriving (Generic, Show)
@@ -69,14 +73,30 @@ signUpValidated :: SignUpRequest -> IO (Either Text AuthResponse)
 signUpValidated req = do
   Right users <- executeQuery $ userByEmail (email req)
   case safeHead users of
-    Just _ -> return $ Left "User already exists."
+    Just _  -> return $ Left "User already exists."
     Nothing -> registerNewUser req
-
 
 registerNewUser :: SignUpRequest -> IO (Either Text AuthResponse)
 registerNewUser req = do
   hashedPass <- hashPassword $ mkPassword (password req)
   uuid <- nextRandom
+  let user =
+        U.User
+          { U.id = uuid
+          , U.email = email req
+          , U.passwordHash = unPasswordHash hashedPass
+          , U.firstName = firstName req
+          , U.lastName = lastName req
+          , U.profilePictureUrl = Nothing
+          , U.color = color req
+          , U.endColor = Nothing
+          , U.authProviderType = IVY
+          , U.testUser = False
+          }
+  insertUserResult <- executeQuery $ insertUser user
+  case insertUserResult of
+    Left _  -> return $ Left "Failed to register user."
+    Right _ -> initSession user (fcmToken req)
 
-  undefined 
-  
+initSession :: User -> Maybe Text -> IO (Either Text AuthResponse)
+initSession user fcmToken = undefined

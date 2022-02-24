@@ -81,7 +81,8 @@ userByEmail email = select $ do
   where_ $ _email user ==. lit email
   return user
 
-saveUser user = Insert {
+insertUser :: User -> Statement () ()
+insertUser user = insert $ Insert {
   into = userSchema,
   rows = values [ UserEntity {
     _id = lit $ id user,
@@ -95,7 +96,7 @@ saveUser user = Insert {
     _endColor = lit $ endColor user,
     _testUser = lit $ testUser user
   }],
-  onConflict = DoUpdate (Upsert UserEntity),
+  onConflict = Abort,
   returning = pure ()
 }
 
